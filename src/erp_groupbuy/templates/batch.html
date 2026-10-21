@@ -1,4 +1,4 @@
-{% extends 'base.html' %}{% from 'macros.html' import token,badge,events as event_list,delivery_table,empty %}{% block title %}{{ batch.name }}{% endblock %}{% block crumb %}采购批次详情{% endblock %}{% block content %}
+{% extends 'base.html' %}{% from 'macros.html' import token,badge,events as event_list,delivery_table,empty with context %}{% block title %}{{ batch.name }}{% endblock %}{% block crumb %}采购批次详情{% endblock %}{% block content %}
 <div class="page-heading">
 <div>
 <span class="eyebrow">{{ batch.code }}</span>

@@ -1,4 +1,4 @@
-{% extends 'base.html' %}{% from 'macros.html' import token,badge,events as event_list,delivery_table %}{% block title %}订单详情{% endblock %}{% block crumb %}订单详情{% endblock %}{% block content %}<div class="page-heading">
+{% extends 'base.html' %}{% from 'macros.html' import token,badge,events as event_list,delivery_table with context %}{% block title %}订单详情{% endblock %}{% block crumb %}订单详情{% endblock %}{% block content %}<div class="page-heading">
 <div>
 <span class="eyebrow">ORDER DETAIL</span>
 <h1>{{ order.code }}</h1>
