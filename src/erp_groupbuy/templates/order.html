@@ -1,0 +1,68 @@
+{% extends 'base.html' %}{% from 'macros.html' import token,badge,events as event_list,delivery_table %}{% block title %}订单详情{% endblock %}{% block crumb %}订单详情{% endblock %}{% block content %}<div class="page-heading">
+<div>
+<span class="eyebrow">ORDER DETAIL</span>
+<h1>{{ order.code }}</h1>
+<p>{{ order.created_at|replace('T',' ') }} · {{ order.display_name }} · {{ order.department }}</p>
+</div>{{ badge(order.status_label,order.status) }}</div>
+<div class="stepper">{% for label,n in [('提交需求',1),('采购合单',2),('到货分配',3),('发货配送',4),('签收完成',5)] %}<div class="{{ 'done' if (n==1 or (n==2 and order.batch_id) or (n==3 and order.allocated) or (n==4 and order.shipped) or (n==5 and order.signed==order.quantity)) and not order.cancelled }}">
+<span>{{ n }}</span>
+<strong>{{ label }}</strong>
+</div>{% endfor %}</div>
+<div class="content-grid">
+<div>
+<section class="panel">
+<div class="panel-heading">
+<h2>订单明细</h2>
+<strong>合计 ¥{{ order.total|money }}</strong>
+</div>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>商品 / SKU</th>
+<th>单价</th>
+<th>订购</th>
+<th>已分配</th>
+<th>已发货</th>
+<th>已签收</th>
+</tr>
+</thead>
+<tbody>{% for p in order.lines %}<tr>
+<td>
+<strong>{{ p.name }}</strong>
+<small>{{ p.sku }} · {{ p.unit }}</small>
+</td>
+<td>¥{{ p.price|money }}</td>
+<td>{{ p.quantity }}</td>
+<td>{{ p.allocated }}</td>
+<td>{{ p.shipped }}</td>
+<td>{{ p.signed }}</td>
+</tr>{% endfor %}</tbody>
+</table>
+</div>
+</section>
+<section class="panel">
+<div class="panel-heading">
+<h2>关联配送单</h2>
+</div>{{ delivery_table(deliveries) }}</section>
+</div>
+<aside>
+<section class="panel padded">
+<h2>收货与需求</h2>
+<dl class="detail-list">
+<dt>收货人</dt>
+<dd>{{ order.display_name }}</dd>
+<dt>收货地址快照</dt>
+<dd>{{ order.address }}</dd>
+<dt>备注</dt>
+<dd>{{ order.note or '无' }}</dd>
+<dt>采购批次</dt>
+<dd>{% if order.batch_id and g.user.role=='admin' %}<a class="text-link" href="{{ url_for('main.batch_detail',bid=order.batch_id) }}">{{ order.batch_code }}</a>{% else %}{{ order.batch_code or '等待管理员合单' }}{% endif %}</dd>
+</dl>{% if g.user.role=='buyer' and not order.batch_id and not order.cancelled %}<form method="post" action="{{ url_for('main.cancel_order',oid=order.id) }}" data-confirm="确认取消这张采购订单？">{{ token() }}<button class="btn danger full">取消订单</button>
+</form>{% endif %}</section>
+<section class="panel">
+<div class="panel-heading">
+<h2>订单轨迹</h2>
+</div>{{ event_list(events) }}</section>
+</aside>
+</div>{% endblock %}

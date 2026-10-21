@@ -1,0 +1,46 @@
+{% extends 'base.html' %}{% from 'macros.html' import badge,empty %}{% block title %}采购与分配{% endblock %}{% block crumb %}采购与分配{% endblock %}{% block content %}<div class="page-heading">
+<div>
+<span class="eyebrow">CONSOLIDATED PROCUREMENT</span>
+<h1>把需求汇聚，把成本看清。</h1>
+<p>按 SKU 合并采购，分次接收货物，再按策略分配给原订单。</p>
+</div>
+<div class="actions">
+<a class="btn secondary" href="{{ url_for('main.export',kind='batches') }}">导出分析 ↓</a>
+<a class="btn primary" href="{{ url_for('main.new_batch') }}">＋ 新建采购批次</a>
+</div>
+</div>
+<div class="batch-grid">{% for b in batches %}<article class="panel batch-card">
+<div class="flex-between">
+<span class="code">{{ b.code }}</span>{{ badge(b.receive_label,'signed' if b.received==b.quantity else 'partial') }}</div>
+<h2>
+<a href="{{ url_for('main.batch_detail',bid=b.id) }}">{{ b.name }}</a>
+</h2>
+<p>{{ b.supplier }}</p>
+<div class="batch-numbers">
+<div>
+<small>合并订单</small>
+<strong>{{ b.order_count }} <em>单</em>
+</strong>
+</div>
+<div>
+<small>采购金额</small>
+<strong>¥{{ b.merged_cost|money }}</strong>
+</div>
+<div>
+<small>模拟节省</small>
+<strong class="teal-text">{{ b.saving_rate }}%</strong>
+</div>
+</div>
+<div class="flex-between help">
+<span>到货 {{ b.received }} / {{ b.quantity }}</span>
+<span>{{ b.fulfill_label }}</span>
+</div>
+<div class="track">
+<i style="width:{{ b.received/b.quantity*100 }}%">
+</i>
+</div>
+<div class="batch-card-footer">
+<span>预计到货 {{ b.expected_date }}</span>
+<a class="text-link" href="{{ url_for('main.batch_detail',bid=b.id) }}">管理批次 →</a>
+</div>
+</article>{% else %}{{ empty('还没有采购批次','从待合单订单中选择需求，创建第一张采购单。') }}{% endfor %}</div>{% endblock %}

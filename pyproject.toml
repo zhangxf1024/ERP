@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "campus-groupbuy-erp"
+version = "1.0.0"
+description = "Campus procurement consolidation and delivery management"
+requires-python = ">=3.11"
+dependencies = ["Flask>=3.1,<3.2", "Flask-WTF>=1.2,<1.3", "waitress>=3,<4"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8,<10"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+erp_groupbuy = ["schema.sql", "demo_catalog.json", "templates/*.html", "static/*.css", "static/*.js", "static/*.svg"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

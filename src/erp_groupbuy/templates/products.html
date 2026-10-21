@@ -1,0 +1,37 @@
+{% extends 'base.html' %}{% from 'macros.html' import badge,empty %}{% block title %}商品档案{% endblock %}{% block crumb %}商品档案{% endblock %}{% block content %}<div class="page-heading">
+<div>
+<span class="eyebrow">PRODUCT MASTER DATA</span>
+<h1>物资有标准，采购有依据。</h1>
+<p>管理在售商品、下单价格与模拟供应商阶梯采购价。</p>
+</div>
+<a class="btn primary" href="{{ url_for('main.product_edit') }}">＋ 新增商品</a>
+</div>
+<section class="panel">
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>商品 / 编码</th>
+<th>分类</th>
+<th>下单价</th>
+<th>单位</th>
+<th>状态</th>
+<th>
+</th>
+</tr>
+</thead>
+<tbody>{% for p in products %}<tr>
+<td>
+<strong>{{ p.name }}</strong>
+<small>{{ p.sku }}</small>
+</td>
+<td>{{ p.category }}</td>
+<td>¥{{ p.price|money }}</td>
+<td>{{ p.unit }}</td>
+<td>{{ badge('在售' if p.active else '已下架','signed' if p.active else 'void') }}</td>
+<td>
+<a class="text-link" href="{{ url_for('main.product_edit',pid=p.id) }}">编辑档案 →</a>
+</td>
+</tr>{% endfor %}</tbody>
+</table>
+</div>{% if not products %}{{ empty() }}{% endif %}</section>{% endblock %}

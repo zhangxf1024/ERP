@@ -1,0 +1,192 @@
+{% extends 'base.html' %}{% from 'macros.html' import token,badge,events as event_list,delivery_table,empty %}{% block title %}{{ batch.name }}{% endblock %}{% block crumb %}采购批次详情{% endblock %}{% block content %}
+<div class="page-heading">
+<div>
+<span class="eyebrow">{{ batch.code }}</span>
+<h1>{{ batch.name }}</h1>
+<p>{{ batch.supplier }} · 预计到货 {{ batch.expected_date }} · {{ batch.note }}</p>
+</div>
+<div class="actions">{{ badge(batch.receive_label,'partial' if batch.shortage else 'signed') }}{{ badge(batch.fulfill_label) }}</div>
+</div>
+<div class="stat-grid">
+<article class="stat-card">
+<div class="stat-top">需求合并</div>
+<strong>{{ batch.original_lines }} <em>→</em> {{ batch.lines|length }}</strong>
+<small>{{ batch.order_count }} 张订单 · 按 SKU 合并采购行</small>
+</article>
+<article class="stat-card">
+<div class="stat-top">合并采购成本</div>
+<strong>¥{{ batch.merged_cost|money }}</strong>
+<small>独立采购 ¥{{ batch.baseline_cost|money }}</small>
+</article>
+<article class="stat-card accent">
+<div class="stat-top">模拟采购节省</div>
+<strong>¥{{ batch.saving|money }}</strong>
+<small>同一阶梯规则对比 · 节省 {{ batch.saving_rate }}%</small>
+</article>
+<article class="stat-card">
+<div class="stat-top">到货 / 采购</div>
+<strong>{{ batch.received }} <em>/ {{ batch.quantity }}</em>
+</strong>
+<small>批次在库 {{ batch.on_hand }} · 待分配 {{ batch.available }}</small>
+</article>
+</div>
+<nav class="anchor-nav">
+<a href="#purchase">01 采购与到货</a>
+<a href="#allocation">02 透明分配</a>
+<a href="#dispatch">03 配送拆单</a>
+<a href="#trace">04 操作轨迹</a>
+</nav>
+<section class="panel" id="purchase">
+<div class="panel-heading">
+<div>
+<h2>01 · 采购明细与库存</h2>
+<p>在库 = 到货 − 已发货；待发货预留包含在在库中；签收不会再次扣减库存。</p>
+</div>
+</div>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>商品</th>
+<th>采购价</th>
+<th>采购</th>
+<th>已到货</th>
+<th>已分配</th>
+<th>待发预留</th>
+<th>已发货</th>
+<th>在库</th>
+<th>缺货</th>
+</tr>
+</thead>
+<tbody>{% for p in batch.lines %}<tr>
+<td>
+<strong>{{ p.name }}</strong>
+<small>{{ p.sku }} · {{ p.unit }}</small>
+</td>
+<td>¥{{ p.unit_cost|money }}</td>
+<td>{{ p.quantity }}</td>
+<td>{{ p.received }}</td>
+<td>{{ p.allocated }}</td>
+<td>{{ p.reserved }}</td>
+<td>{{ p.shipped }}</td>
+<td class="teal-text">{{ p.on_hand }}</td>
+<td>{{ badge(p.shortage,'partial' if p.shortage else 'signed') }}</td>
+</tr>{% endfor %}</tbody>
+</table>
+</div>
+<div class="panel-body">
+<h3>登记本次到货</h3>{% if batch.shortage %}<form class="receive-form" method="post" action="{{ url_for('main.receive',bid=batch.id) }}">{{ token() }}<label>采购商品<select name="item_id" required>{% for p in batch.lines if p.shortage %}<option value="{{ p.id }}">{{ p.name }} · 待到货 {{ p.shortage }} {{ p.unit }}</option>{% endfor %}</select>
+</label>
+<label>合格到货数量<input type="number" name="quantity" min="1" max="9999999" required>
+</label>
+<label>到货凭证号<input name="reference" required maxlength="80" placeholder="如 QH-20261021-01">
+</label>
+<label>验收备注<input name="note" maxlength="300" placeholder="破损物资不计入合格到货">
+</label>
+<button class="btn primary">确认到货</button>
+</form>
+<p class="help">同一采购商品不能重复使用同一个到货凭证号；同一辆货车的多种商品可以共用凭证号。</p>{% else %}<p class="success-note">本批次商品已全部到货。</p>{% endif %}<details>
+<summary>查看到货记录（{{ receipts|length }} 条）</summary>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>商品</th>
+<th>数量</th>
+<th>凭证</th>
+<th>验收备注</th>
+<th>时间</th>
+</tr>
+</thead>
+<tbody>{% for r in receipts %}<tr>
+<td>{{ r.name }}</td>
+<td>{{ r.quantity }} {{ r.unit }}</td>
+<td>{{ r.reference }}</td>
+<td class="wrap">{{ r.note or '—' }}</td>
+<td>{{ r.created_at|replace('T',' ') }}</td>
+</tr>{% endfor %}</tbody>
+</table>
+</div>
+</details>
+</div>
+</section>
+<section class="panel" id="allocation">
+<div class="panel-heading">
+<div>
+<h2>02 · 缺货分配策略对比</h2>
+<p>两种策略均只处理本轮未分配到货；已确认的历史分配不会撤回。</p>
+</div>{{ badge('待分配 '+batch.available|string,'partial') }}</div>
+<div class="strategy-cards">
+<article>
+<span class="strategy-icon">01</span>
+<div>
+<h3>先到先得 · FIFO</h3>
+<p>按原订单创建时间依次满足剩余需求；同一时间按订单编号顺序处理。</p>
+</div>
+</article>
+<article>
+<span class="strategy-icon coral">02</span>
+<div>
+<h3>按需比例 · 最大余数法</h3>
+<p>按剩余需求比例分配整数数量，余数大的优先补 1；并列时较早订单优先。</p>
+</div>
+</article>
+</div>
+{% if comparisons %}<div class="table-wrap allocation-table">
+<table>
+<thead>
+<tr>
+<th>原订单 / 买家</th>
+<th>商品</th>
+<th>剩余需求</th>
+<th>FIFO 本轮分配</th>
+<th>比例 本轮分配</th>
+<th>比例分配后仍缺</th>
+</tr>
+</thead>
+<tbody>{% for a,b in comparisons %}<tr>
+<td>
+<span class="code">{{ a.order_code }}</span>
+<small>{{ a.display_name }}</small>
+</td>
+<td>{{ a.name }}</td>
+<td>{{ a.remaining }}</td>
+<td>{{ a.quantity_new }}</td>
+<td class="{{ 'compare-highlight' if a.quantity_new!=b.quantity_new }}">{{ b.quantity_new }}</td>
+<td>{{ b.shortage }}</td>
+</tr>{% endfor %}</tbody>
+</table>
+</div>{% endif %}<div class="panel-body">{% if batch.available %}<form class="inline-form" action="{{ url_for('main.allocate',bid=batch.id) }}" method="post" data-confirm="确认使用所选策略分配本轮到货？历史分配不会回退。">{{ token() }}<input name="version" type="hidden" value="{{ batch.version }}">
+<select name="policy" aria-label="分配策略">
+<option value="fair">按剩余需求比例分配</option>
+<option value="fifo">先到先得 FIFO</option>
+</select>
+<button class="btn primary">确认本轮分配</button>
+<span class="help">确认时重新校验数据版本。</span>
+</form>{% else %}<p class="help">目前没有新的待分配到货。补货后可再次分配，逐步满足剩余需求。</p>{% endif %}</div>
+</section>
+<section class="panel" id="dispatch">
+<div class="panel-heading">
+<div>
+<h2>03 · 配送拆单</h2>
+<p>按“买家 + 收货地址”生成配送单；再次生成仅处理新增或作废释放的数量。</p>
+</div>
+<form method="post" action="{{ url_for('main.generate_deliveries',bid=batch.id) }}">{{ token() }}<button class="btn primary">生成配送单 →</button>
+</form>
+</div>{{ delivery_table(deliveries) }}</section>
+<div class="dashboard-grid" id="trace">
+<section class="panel">
+<div class="panel-heading">
+<h2>关联原订单</h2>
+</div>
+<div class="panel-body link-chips">{% for o in orders %}<a href="{{ url_for('main.order_detail',oid=o.id) }}">{{ o.code }} ↗</a>{% endfor %}</div>
+<div class="panel-body method-note">
+<strong>成本对比口径</strong>
+<span>独立采购：每张原订单的商品数量分别套用采购阶梯价后求和。合并采购：每种商品汇总数量后套用同一阶梯价。不计运费、税费和损耗；节省金额是教学模拟指标。</span>
+</div>
+</section>
+<section class="panel">
+<div class="panel-heading">
+<h2>批次操作轨迹</h2>
+</div>{{ event_list(events) }}</section>
+</div>{% endblock %}

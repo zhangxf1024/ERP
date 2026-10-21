@@ -1,0 +1,49 @@
+{% extends 'base.html' %}{% from 'macros.html' import token %}{% block title %}商品档案编辑{% endblock %}{% block crumb %}商品档案编辑{% endblock %}{% block content %}<div class="page-heading">
+<div>
+<span class="eyebrow">PRODUCT SETTINGS</span>
+<h1>{{ '编辑商品档案' if product else '新增校园物资' }}</h1>
+<p>修改只影响之后的下单与合单；已有订单和采购批次保留价格快照。</p>
+</div>
+</div>
+<form method="post" class="content-grid">{{ token() }}<section class="panel padded">
+<h2>基本信息</h2>
+<div class="form-grid">
+<label>SKU 编码<input name="sku" required maxlength="40" value="{{ product.sku if product else '' }}">
+</label>
+<label>商品名称<input name="name" required maxlength="80" value="{{ product.name if product else '' }}">
+</label>
+<label>分类<input name="category" required maxlength="40" value="{{ product.category if product else '' }}" list="categories">
+<datalist id="categories">
+<option>办公文具</option>
+<option>纸品本册</option>
+<option>实验耗材</option>
+<option>活动物料</option>
+<option>清洁生活</option>
+</datalist>
+</label>
+<label>计量单位<input name="unit" required maxlength="12" value="{{ product.unit if product else '' }}" placeholder="盒 / 包 / 本">
+</label>
+<label>买家下单价（元）<input type="number" step="0.01" min="0.01" max="100000" name="price" required value="{{ '%.2f'|format(product.price/100) if product else '' }}">
+</label>
+<label>上架状态<select name="active">
+<option value="1" {{ 'selected' if not product or product.active }}>在售</option>
+<option value="0" {{ 'selected' if product and not product.active }}>下架</option>
+</select>
+</label>
+</div>
+<label>规格与用途描述<textarea name="description" required maxlength="500" rows="4">{{ product.description if product else '' }}</textarea>
+</label>
+</section>
+<aside class="panel padded">
+<h2>采购阶梯价</h2>
+<p class="help">固定模拟供应商；数量门槛递增，单价不增加。第一档从 1 个单位起。</p>
+<label>基础采购单价（元）<input name="base_cost" type="number" step="0.01" min="0.01" max="100000" required value="{{ '%.2f'|format(tiers[0][1]/100) if product else '' }}">
+</label>{% for i in [1,2] %}<div class="form-grid">
+<label>第 {{ i+1 }} 档起购数量<input name="threshold{{ i }}" type="number" min="2" max="999999" value="{{ tiers[i][0] if tiers|length>i else '' }}">
+</label>
+<label>该档单价（元）<input name="cost{{ i }}" type="number" step="0.01" min="0.01" max="100000" value="{{ '%.2f'|format(tiers[i][1]/100) if tiers|length>i else '' }}">
+</label>
+</div>{% endfor %}<p class="help">第二、三档可留空，但同一档的门槛和价格须一起填写。</p>
+<button class="btn primary full">保存商品档案</button>
+</aside>
+</form>{% endblock %}

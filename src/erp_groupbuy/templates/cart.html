@@ -1,0 +1,56 @@
+{% extends 'base.html' %}{% from 'macros.html' import token,empty %}{% block title %}采购购物车{% endblock %}{% block crumb %}采购购物车{% endblock %}{% block content %}<div class="page-heading">
+<div>
+<span class="eyebrow">YOUR PURCHASE LIST</span>
+<h1>整理好需求，剩下的交给协作。</h1>
+<p>提交后进入采购待合单队列；合单前可以取消。</p>
+</div>
+<a class="btn secondary" href="{{ url_for('main.shop') }}">继续选购 →</a>
+</div>{% if items %}<div class="content-grid">
+<section class="panel">
+<div class="panel-heading">
+<h2>采购清单 <span class="muted">{{ items|length }} 种商品</span>
+</h2>
+</div>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>商品</th>
+<th>确认单价</th>
+<th>数量</th>
+<th>小计</th>
+</tr>
+</thead>
+<tbody>{% for p in items %}<tr>
+<td>
+<strong>{{ p.name }}</strong>
+<small>{{ p.sku }} · {{ p.unit }}</small>{% if not p.active %}<small class="danger-text">已下架，请移除</small>{% elif p.price != p.quoted_price %}<small class="danger-text">现价 ¥{{ p.price|money }}，请更新确认</small>{% endif %}</td>
+<td>¥{{ p.quoted_price|money }}</td>
+<td>
+<form class="inline-form" action="{{ url_for('main.cart_update',pid=p.product_id) }}" method="post">{{ token() }}<input class="qty" type="number" name="quantity" value="{{ p.quantity }}" min="0" max="9999" required aria-label="数量">
+<button class="btn small secondary">更新</button>
+</form>
+<small>设为 0 可移除</small>
+</td>
+<td class="strong">¥{{ (p.quantity*p.quoted_price)|money }}</td>
+</tr>{% endfor %}</tbody>
+</table>
+</div>
+</section>
+<aside class="panel checkout-panel">
+<span class="eyebrow">CHECKOUT</span>
+<h2>确认采购需求</h2>
+<form action="{{ url_for('main.checkout') }}" method="post">{{ token() }}<label>收货地址<textarea name="address" required maxlength="200" rows="3">{{ g.user.address }}</textarea>
+</label>
+<label>采购备注<textarea name="note" maxlength="300" rows="3" placeholder="例如：活动日期、收货时段或物资用途">
+</textarea>
+</label>
+<div class="checkout-total">
+<span>订单合计</span>
+<strong>¥{{ total|money }}</strong>
+</div>
+<p class="help">此处记录采购需求，不进行线上付款。地址与商品价格将在提交时保存。</p>
+<button class="btn primary full">提交采购订单 →</button>
+</form>
+</aside>
+</div>{% else %}{{ empty('购物车还是空的','去商城为下一次活动或日常工作选一些物资吧。') }}{% endif %}{% endblock %}

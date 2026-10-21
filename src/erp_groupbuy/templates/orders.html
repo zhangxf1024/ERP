@@ -1,0 +1,56 @@
+{% extends 'base.html' %}{% from 'macros.html' import badge,empty %}{% block title %}订单中心{% endblock %}{% block crumb %}订单中心{% endblock %}{% block content %}<div class="page-heading">
+<div>
+<span class="eyebrow">ORDER MANAGEMENT</span>
+<h1>{{ '需求清晰，协作有序。' if g.user.role=='admin' else '我的采购，每一步都看得见。' }}</h1>
+<p>订单状态根据实际分配、发货与签收数量计算。</p>
+</div>{% if g.user.role=='admin' %}<div class="actions">
+<a class="btn secondary" href="{{ url_for('main.export',kind='orders') }}">导出 CSV ↓</a>
+<a class="btn primary" href="{{ url_for('main.new_batch') }}">采购合单 →</a>
+</div>{% endif %}</div>
+<form class="toolbar">
+<div class="search-field">
+<span>⌕</span>
+<input name="q" value="{{ term }}" aria-label="搜索订单" placeholder="订单编号、买家或备注">
+</div>
+<select name="status" aria-label="订单状态">
+<option value="">全部状态</option>{% for value,label in order_labels.items() %}<option value="{{ value }}" {{ 'selected' if status == value }}>{{ label }}</option>{% endfor %}</select>
+<button class="btn secondary">筛选</button>
+</form>
+<section class="panel">{% if orders %}<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>订单 / 时间</th>
+<th>采购用户</th>
+<th>金额 / 数量</th>
+<th>履约进度</th>
+<th>状态</th>
+<th>
+</th>
+</tr>
+</thead>
+<tbody>{% for o in orders %}<tr>
+<td>
+<a class="code" href="{{ url_for('main.order_detail',oid=o.id) }}">{{ o.code }}</a>
+<small>{{ o.created_at|replace('T',' ') }}</small>
+</td>
+<td>{{ o.display_name }}<small>{{ o.department }}</small>
+</td>
+<td>
+<strong>¥{{ o.total|money }}</strong>
+<small>{{ o.lines|length }} 种 · {{ o.quantity }} 件</small>
+</td>
+<td>
+<div class="mini-progress">
+<i style="width:{{ o.signed/o.quantity*100 }}%">
+</i>
+</div>
+<small>已签收 {{ o.signed }}/{{ o.quantity }}</small>
+</td>
+<td>{{ badge(o.status_label,o.status) }}</td>
+<td>
+<a class="text-link" href="{{ url_for('main.order_detail',oid=o.id) }}">详情 →</a>
+</td>
+</tr>{% endfor %}</tbody>
+</table>
+</div>{% else %}{{ empty('没有符合条件的订单') }}{% endif %}</section>{% endblock %}

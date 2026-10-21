@@ -1,0 +1,128 @@
+{% extends 'base.html' %}{% from 'macros.html' import badge,empty,events %}{% block title %}运营概览{% endblock %}{% block crumb %}运营概览{% endblock %}{% block content %}
+<div class="page-heading">
+<div>
+<span class="eyebrow">OPERATION OVERVIEW</span>
+<h1>每一份需求，都在有序流转。</h1>
+<p>从需求汇聚到最后一公里，掌握校园采购的每一步。</p>
+</div>
+<a class="btn primary" href="{{ url_for('main.new_batch') }}">＋ 创建采购批次</a>
+</div>
+<section class="overview-banner">
+<div>
+<span class="badge light">青禾 · 运营工作台</span>
+<h2>把分散的需求，<br>变成共同的采购力。</h2>
+<p>{{ metrics.pending }} 张订单等待合单 · {{ metrics.ready }} 张配送单等待发出</p>
+<a href="{{ url_for('main.batches') }}">查看采购进度 ↗</a>
+</div>
+<div class="banner-graphic">
+<div class="graphic-ring">
+</div>
+<span class="graphic-box">QH<br>
+<small>GATHER TOGETHER</small>
+</span>
+<i class="graphic-tag">COLLECT. CONNECT. DELIVER.</i>
+</div>
+</section>
+<div class="stat-grid">
+<article class="stat-card">
+<div class="stat-top">有效订单总额 <span>¥</span>
+</div>
+<strong>¥{{ metrics.volume|money }}</strong>
+<small>{{ metrics.orders }} 张有效订单 · 非实际收款</small>
+</article>
+<article class="stat-card accent">
+<div class="stat-top">合单模拟节省 <span>↗</span>
+</div>
+<strong>¥{{ metrics.saving|money }}</strong>
+<small>独立采购与合并采购的成本差额</small>
+</article>
+<article class="stat-card">
+<div class="stat-top">等待采购合单 <span>⇄</span>
+</div>
+<strong>{{ metrics.pending }}<em>单</em>
+</strong>
+<small>确认需求后统一向供应商采购</small>
+</article>
+<article class="stat-card">
+<div class="stat-top">批次在库数量 <span>▣</span>
+</div>
+<strong>{{ metrics.on_hand }}<em>件</em>
+</strong>
+<small>累计到货 − 已发货（跨单位汇总）</small>
+</article>
+</div>
+<div class="dashboard-grid">
+<section class="panel">
+<div class="panel-heading">
+<div>
+<h2>需求金额趋势</h2>
+<p>最近 14 个有订单的日期 · 排除已取消订单</p>
+</div>
+<a class="text-link" href="{{ url_for('main.export',kind='orders') }}">导出 CSV ↓</a>
+</div>{% if trend %}<div class="bar-chart">{% for r in trend %}<div class="bar-col">
+<span class="bar-value">¥{{ r.value|money }}</span>
+<div class="bar" style="height:{{ (r.value/max_trend*145+5)|round }}px" title="{{ r.day }} · {{ r.count }} 单 · ¥{{ r.value|money }}">
+</div>
+<small>{{ r.day[5:] }}</small>
+</div>{% endfor %}</div>{% else %}{{ empty() }}{% endif %}</section>
+<section class="panel">
+<div class="panel-heading">
+<div>
+<h2>采购需求构成</h2>
+<p>按商品分类统计订单金额</p>
+</div>
+</div>
+<div class="category-bars">{% for c in categories %}<div>
+<div class="flex-between">
+<span>{{ c.category }}</span>
+<strong>¥{{ c.value|money }}</strong>
+</div>
+<div class="track">
+<i style="width:{{ c.value/max_category*100 }}%">
+</i>
+</div>
+</div>{% else %}{{ empty() }}{% endfor %}</div>
+</section>
+</div>
+<div class="attention-strip">
+<span class="attention-icon">!</span>
+<div>
+<strong>需要关注</strong>
+<p>采购尚缺 {{ metrics.shortage }} 件；配送中有 {{ metrics.issues }} 张问题反馈单。到货不足时，先预览分配策略，再确认本轮分配。</p>
+</div>
+<a href="{{ url_for('main.deliveries',status='shipped') }}">查看配送 →</a>
+</div>
+<div class="dashboard-grid">
+<section class="panel">
+<div class="panel-heading">
+<div>
+<h2>近期采购批次</h2>
+<p>收货与履约分别追踪</p>
+</div>
+<a class="text-link" href="{{ url_for('main.batches') }}">全部批次 →</a>
+</div>{% for b in batches %}<a class="batch-summary" href="{{ url_for('main.batch_detail',bid=b.id) }}">
+<div class="batch-icon">▦</div>
+<div class="grow">
+<strong>{{ b.name }}</strong>
+<small>{{ b.code }} · {{ b.order_count }} 张订单</small>
+<div class="track">
+<i style="width:{{ b.received/b.quantity*100 }}%">
+</i>
+</div>
+</div>
+<div class="align-right">{{ badge(b.receive_label,'signed' if b.received==b.quantity else 'partial') }}<small>{{ b.received }} / {{ b.quantity }} 件</small>
+</div>
+</a>{% else %}{{ empty() }}{% endfor %}</section>
+<section class="panel">
+<div class="panel-heading">
+<div>
+<h2>协作动态</h2>
+<p>最近 8 条业务操作</p>
+</div>
+</div>{{ events(recent) }}</section>
+</div>
+<div class="method-note">
+<strong>数据口径</strong>
+<span>采购节省基于同一组模拟供应商阶梯价计算，不代表真实报价；库存按商品单位管理，看板“件”为展示汇总；本系统不包含支付、财务核算和真实物流接口。</span>
+</div>
+{% endblock %}

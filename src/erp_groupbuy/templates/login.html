@@ -1,0 +1,50 @@
+{% extends 'base.html' %}{% from 'macros.html' import token %}{% block title %}欢迎登录{% endblock %}{% block content %}<div class="login-layout">
+<section class="login-story">
+<a class="brand" href="{{ url_for('auth.login') }}">
+<span class="brand-mark">禾</span>
+<span>青禾集采<small>GATHER / CAMPUS</small>
+</span>
+</a>
+<span class="eyebrow">A BETTER WAY TO GATHER</span>
+<h1>汇聚校园需求，<br>让协作自然发生。</h1>
+<p>从一张小小的采购清单，到每一份准时送达的物资。<br>合单、到货、分配与配送，都在同一个空间有序流转。</p>
+<div class="login-art">
+<div class="floating-card card-a">
+<span>⇄</span>
+<strong>采购合单</strong>
+<small>零散需求 → 规模价值</small>
+</div>
+<div class="floating-card card-b">
+<span>✓</span>
+<strong>透明履约</strong>
+<small>每一件商品，都有迹可循</small>
+</div>
+<div class="art-circle">禾</div>
+</div>
+<div class="login-steps">
+<span>01 需求汇聚</span>
+<span>02 智能分配</span>
+<span>03 安心送达</span>
+</div>
+</section>
+<section class="login-panel">
+<div class="login-form">
+<span class="eyebrow">WELCOME BACK</span>
+<h2>登录工作空间</h2>
+<p class="muted">使用你的校园采购账号继续。</p>
+<form method="post">{{ token() }}<label>账号<input name="username" autocomplete="username" required placeholder="例如 admin 或 buyer01" maxlength="80">
+</label>
+<label>密码<input name="password" type="password" autocomplete="current-password" required placeholder="输入初始化时设置的密码">
+</label>
+<button class="btn primary full">进入青禾集采 <span>→</span>
+</button>
+</form>
+<div class="login-tip">
+<strong>演示账号</strong>
+<p>管理员：admin<br>采购用户：buyer01 至 buyer10</p>
+<small>请使用初始化示例数据时自行设置的密码。系统不提供默认密码。</small>
+</div>
+<p class="fine-print">课程演示系统 · 不涉及真实支付与物流服务</p>
+</div>
+</section>
+</div>{% endblock %}

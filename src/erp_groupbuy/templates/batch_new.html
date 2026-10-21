@@ -1,0 +1,50 @@
+{% extends 'base.html' %}{% from 'macros.html' import token,empty %}{% block title %}新建采购批次{% endblock %}{% block crumb %}新建采购批次{% endblock %}{% block content %}<div class="page-heading">
+<div>
+<span class="eyebrow">BUILD A PURCHASE BATCH</span>
+<h1>选择需求，合并采购。</h1>
+<p>相同 SKU 自动汇总；采购阶梯价以合单时的商品档案为准。</p>
+</div>
+</div>{% if orders %}<form method="post" class="content-grid">{{ token() }}<section class="panel">
+<div class="panel-heading">
+<h2>待合单订单 · {{ orders|length }}</h2>
+<label class="checkbox">
+<input type="checkbox" data-check-all="order_ids"> 全选</label>
+</div>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>选择</th>
+<th>订单 / 买家</th>
+<th>采购需求</th>
+<th>金额</th>
+</tr>
+</thead>
+<tbody>{% for o in orders %}<tr>
+<td>
+<input type="checkbox" name="order_ids" value="{{ o.id }}" aria-label="选择 {{ o.code }}">
+</td>
+<td>
+<a class="code" href="{{ url_for('main.order_detail',oid=o.id) }}">{{ o.code }}</a>
+<small>{{ o.display_name }} · {{ o.created_at[5:16]|replace('T',' ') }}</small>
+</td>
+<td class="wrap">{% for p in o.lines %}<span class="line-chip">{{ p.name }} × {{ p.quantity }}</span>{% endfor %}</td>
+<td>¥{{ o.total|money }}</td>
+</tr>{% endfor %}</tbody>
+</table>
+</div>
+</section>
+<aside class="panel padded">
+<span class="eyebrow">BATCH SETTINGS</span>
+<h2>采购批次信息</h2>
+<label>批次名称<input name="name" required maxlength="80" placeholder="例如：秋季社团活动联合采购">
+</label>
+<label>预计到货日期<input type="date" name="expected_date" required value="{{ tomorrow }}">
+</label>
+<label>批次备注<textarea name="note" maxlength="300" rows="3" placeholder="采购背景或供应商到货约定">
+</textarea>
+</label>
+<p class="help">供应商：青禾校园物资供应中心（模拟）。每张订单只能进入一个采购批次；已合单订单不能由买家取消。</p>
+<button class="btn primary full" data-confirm-button>确认合并采购 →</button>
+</aside>
+</form>{% else %}{{ empty('没有待合单的订单','买家提交新订单后，可在这里统一采购。') }}{% endif %}{% endblock %}
