@@ -193,7 +193,7 @@ def merge_orders(actor, order_ids, name, expected_date, note, key, at=None):
         bid = conn.execute("INSERT INTO batches(code,name,supplier,created_at,expected_date,note,baseline_cost,merged_cost,original_lines,order_count) VALUES(?,?,?,?,?,?,?,?,?,?)",
                            (code("PO", at), name, "青禾校园物资供应中心（模拟）", at or now(), expected_date, note, baseline, merged, len(lines), len(ids))).lastrowid
         for g in groups.values():
-            conn.execute("INSERT INTO batch_items(batch_id,product_id,sku,name,unit,quantity,unit_cost,tiers) VALUES(?,?,?,?,?,?,?,?,?)",
+            conn.execute("INSERT INTO batch_items(batch_id,product_id,sku,name,unit,quantity,unit_cost,tiers) VALUES(?,?,?,?,?,?,?,?)",
                          (bid, g["product_id"], g["sku"], g["name"], g["unit"], g["quantity"], tier_price(g["tiers"], g["quantity"]), g["tiers"]))
         conn.execute(f"UPDATE orders SET batch_id=? WHERE id IN ({placeholders})", [bid] + ids)
         for oid in ids:
