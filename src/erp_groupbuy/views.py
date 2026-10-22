@@ -212,10 +212,25 @@ def product_edit(pid):
 def export(kind):
     if kind == "orders":
         header = ["订单号", "买家", "部门", "状态", "销售金额(元)", "商品数量", "已分配", "已发货", "已签收", "地址", "下单时间"]
-        data = [[o["code"], o["display_name"], o["department"], o["status_label"], f"{o['total']/100:.2f}", o["quantity"], o["allocated"], o["shipped"], o["signed"], o["address"], o["created_at"] for o in q.orders()]
+        data = [
+            [
+                o["code"], o["display_name"], o["department"], o["status_label"],
+                f"{o['total']/100:.2f}", o["quantity"], o["allocated"],
+                o["shipped"], o["signed"], o["address"], o["created_at"],
+            ]
+            for o in q.orders()
+        ]
     elif kind == "batches":
         header = ["采购单", "名称", "订单数", "原订单行数", "合并采购行数", "独立采购成本(元)", "合并采购成本(元)", "模拟节省(元)", "到货数量", "采购数量"]
-        data = [[b["code"], b["name"], b["order_count"], b["original_lines"], len(b["lines"]), f"{b['baseline_cost']/100:.2f}", f"{b['merged_cost']/100:.2f}", f"{b['saving']/100:.2f}", b["received"], b["quantity"]] for b in q.batches()]
+        data = [
+            [
+                b["code"], b["name"], b["order_count"], b["original_lines"],
+                len(b["lines"]), f"{b['baseline_cost']/100:.2f}",
+                f"{b['merged_cost']/100:.2f}", f"{b['saving']/100:.2f}",
+                b["received"], b["quantity"],
+            ]
+            for b in q.batches()
+        ]
     else:
         abort(404)
     output = io.StringIO(newline="")
